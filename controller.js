@@ -1,9 +1,9 @@
-const fetchWords = require("./model");
+const fetchWord = require("./model");
 
-function getWords(request, response) {
-  fetchWords().then((word) => {
+function getWord(request, response) {
+  fetchWord().then((word) => {
     response.status(200).send({ word });
   });
 }
 
-module.exports = getWords;
+module.exports = getWord;

@@ -1,12 +1,12 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const getWords = require('./controller')
+const getWord = require('./controller')
 
 app.use(cors());
 
 
-app.get('/api/words', getWords)
+app.get('/api/word', getWord)
 
 
 app.use((err, request, response, next) => {
