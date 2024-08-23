@@ -14,16 +14,48 @@ const io = new Server(server, {
 	},
 });
 
+let currentDrawer = null;
+let players = [];
+
 io.on("connection", (socket) => {
 	console.log("A user connected");
+	players.push(socket.id);
 
-	socket.on("message", (data) => {
-		console.log("Message received:", data);
-		io.emit("message", data);
+	if (players.length === 1) {
+		currentDrawer = socket.id;
+		socket.emit("start-drawing");
+	}
+
+	socket.on("draw", (data) => {
+		socket.broadcast.emit("draw", data);
+	});
+
+	socket.on("fill", (data) => {
+		socket.broadcast.emit("fill", data);
+	});
+
+	socket.on("undo", () => {
+		socket.broadcast.emit("undo");
+	});
+
+	socket.on("redo", () => {
+		socket.broadcast.emit("redo");
+	});
+
+	socket.on("guess", (guess) => {
+		// Implement guess checking logic here
+		console.log(`Player ${socket.id} guessed: ${guess}`);
 	});
 
 	socket.on("disconnect", () => {
 		console.log("User disconnected");
+		players = players.filter((id) => id !== socket.id);
+		if (currentDrawer === socket.id) {
+			currentDrawer = players[0] || null;
+			if (currentDrawer) {
+				io.to(currentDrawer).emit("start-drawing");
+			}
+		}
 	});
 });
 
