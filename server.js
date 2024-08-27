@@ -19,6 +19,7 @@ let players = [];
 let currentWord = "";
 let timer = null; // Timer reference
 let timerDuration = 0; // Timer duration in seconds
+let usernames = new Map(); // Store usernames here
 
 io.on("connection", (socket) => {
 	console.log("A user connected");
@@ -59,25 +60,34 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("guess", (guess) => {
-		console.log(`Player ${socket.id} guessed: ${guess}`);
+		const username = usernames.get(socket.id) || `Player ${socket.id}`;
+		console.log(`${username} guessed: ${guess}`);
 		if (guess.toLowerCase() === currentWord.toLowerCase()) {
 			io.emit("chat-message", {
 				name: "System",
-				message: `Player ${socket.id} guessed the word!`,
+				message: `${username} guessed the word!`,
 				isOwnMessage: false,
 			});
 		}
 	});
 
-	socket.on("send-chat-message", (message) => {
-		if (message.toLowerCase() === currentWord.toLowerCase()) {
+	socket.on("send-chat-message", (messageData) => {
+		const username =
+			usernames.get(socket.id) ||
+			messageData.name ||
+			`Player ${socket.id}`;
+		if (messageData.message.toLowerCase() === currentWord.toLowerCase()) {
 			io.emit("chat-message", {
 				name: "System",
-				message: `${message.name} guessed the word!`,
+				message: `${username} guessed the word!`,
 				isOwnMessage: false,
 			});
 		} else {
-			socket.broadcast.emit("chat-message", message);
+			socket.broadcast.emit("chat-message", {
+				name: username,
+				message: messageData.message,
+				isOwnMessage: false,
+			});
 		}
 	});
 
@@ -100,14 +110,24 @@ io.on("connection", (socket) => {
 		}
 	});
 
+	socket.on("new-user", (name) => {
+		usernames.set(socket.id, name);
+		socket.broadcast.emit("user-connected", name);
+	});
+
 	socket.on("disconnect", () => {
 		console.log("User disconnected");
+		const username = usernames.get(socket.id);
 		players = players.filter((id) => id !== socket.id);
+		usernames.delete(socket.id);
 		if (currentDrawer === socket.id) {
 			currentDrawer = players[0] || null;
 			if (currentDrawer) {
 				io.to(currentDrawer).emit("start-drawing");
 			}
+		}
+		if (username) {
+			socket.broadcast.emit("user-disconnected", username);
 		}
 	});
 });
