@@ -20,9 +20,12 @@ let players = [];
 io.on("connection", (socket) => {
   console.log("A user connected");
   players.push(socket.id);
+  socket.isArtist = false;
 
   if (players.length === 1) {
     currentDrawer = socket.id;
+    socket.currentDrawer = true;
+    console.log(socket);
     socket.emit("start-drawing");
   }
 
