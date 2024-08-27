@@ -16,7 +16,9 @@ const io = new Server(server, {
 
 let currentDrawer = null;
 let players = [];
-let currentWord = "word";
+let currentWord = "";
+let timer = null; // Timer reference
+let timerDuration = 0; // Timer duration in seconds
 
 io.on("connection", (socket) => {
 	console.log("A user connected");
@@ -69,10 +71,9 @@ io.on("connection", (socket) => {
 
 	socket.on("send-chat-message", (message) => {
 		if (message.toLowerCase() === currentWord.toLowerCase()) {
-			console.log(players);
 			io.emit("chat-message", {
 				name: "System",
-				message: `Player ${socket.id} guessed the word!`,
+				message: `${message.name} guessed the word!`,
 				isOwnMessage: false,
 			});
 		} else {
@@ -80,6 +81,7 @@ io.on("connection", (socket) => {
 		}
 	});
 
+	// Timer functionality
 	socket.on("start-timer", (duration) => {
 		if (socket.id === currentDrawer) {
 			clearInterval(timer); // Clear any existing timer
