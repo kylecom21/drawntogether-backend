@@ -16,7 +16,7 @@ const io = new Server(server, {
 
 let currentDrawer = null;
 let players = [];
-let currentWord = "";
+let currentWord = "word";
 
 io.on("connection", (socket) => {
 	console.log("A user connected");
@@ -68,14 +68,33 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("send-chat-message", (message) => {
-		if (message.message.toLowerCase() === currentWord.toLowerCase()) {
+		if (message.toLowerCase() === currentWord.toLowerCase()) {
+			console.log(players);
 			io.emit("chat-message", {
 				name: "System",
-				message: `${message.name} guessed the word!`,
+				message: `Player ${socket.id} guessed the word!`,
 				isOwnMessage: false,
 			});
 		} else {
 			socket.broadcast.emit("chat-message", message);
+		}
+	});
+
+	socket.on("start-timer", (duration) => {
+		if (socket.id === currentDrawer) {
+			clearInterval(timer); // Clear any existing timer
+			timerDuration = duration; // Set the duration
+			io.emit("timer-update", timerDuration); // Broadcast initial timer value to all clients
+
+			timer = setInterval(() => {
+				timerDuration--;
+				io.emit("timer-update", timerDuration); // Broadcast updated timer value to all clients
+
+				if (timerDuration <= 0) {
+					clearInterval(timer);
+					io.emit("timer-ended"); // Notify all clients that the timer has ended
+				}
+			}, 1000);
 		}
 	});
 
