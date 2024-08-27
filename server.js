@@ -26,7 +26,6 @@ io.on("connection", (socket) => {
 	if (players.length === 1) {
 		currentDrawer = socket.id;
 		socket.currentDrawer = true;
-		console.log(socket);
 		socket.emit("start-drawing");
 	} else {
 		socket.emit("current-word", { word: currentWord });
@@ -53,13 +52,31 @@ io.on("connection", (socket) => {
 		socket.broadcast.emit("new-word", { word: currentWord });
 	});
 
-	socket.on("request-current-word", (data) => {
+	socket.on("request-current-word", () => {
 		socket.emit("current-word", { word: currentWord });
 	});
 
 	socket.on("guess", (guess) => {
-		// Implement guess checking logic here
 		console.log(`Player ${socket.id} guessed: ${guess}`);
+		if (guess.toLowerCase() === currentWord.toLowerCase()) {
+			io.emit("chat-message", {
+				name: "System",
+				message: `Player ${socket.id} guessed the word!`,
+				isOwnMessage: false,
+			});
+		}
+	});
+
+	socket.on("send-chat-message", (message) => {
+		if (message.message.toLowerCase() === currentWord.toLowerCase()) {
+			io.emit("chat-message", {
+				name: "System",
+				message: `${message.name} guessed the word!`,
+				isOwnMessage: false,
+			});
+		} else {
+			socket.broadcast.emit("chat-message", message);
+		}
 	});
 
 	socket.on("disconnect", () => {
