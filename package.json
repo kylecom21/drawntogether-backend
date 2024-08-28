@@ -5,10 +5,10 @@
 	"main": "server.js",
 	"scripts": {
 		"setup-dbs": "psql -f ./db/setup.sql",
-		"start-server": "node server.js",
+		"start": "node server.js",
 		"seed": "PGPASSWORD=password node ./db/seeds/run-seed.js",
 		"main": "listen.js",
-		"start": "node listen.js",
+		"start-server": "node listen.js",
 		"seed-prod": "NODE_ENV=production npm run seed",
 		"test": "jest"
 	},

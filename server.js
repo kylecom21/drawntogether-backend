@@ -9,7 +9,8 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
 	cors: {
-		origin: "https://drawn-together.netlify.app",
+		origin:
+			process.env.FRONTEND_URL || "https://drawn-together.netlify.app",
 		methods: ["GET", "POST"],
 	},
 });
